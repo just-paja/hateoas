@@ -16,11 +16,15 @@ npm install hateoas-hal-link-resolver
 
 ## Usage
 
-Resolver is written for EcmaScript modules, so after installing you are one step from using it. This defined user object will be a base for all of our examples.
+Resolver is written for EcmaScript modules, so after installing you are one step from using it.
 
 ```javascript
 import resolve from 'hateoas-hal-link-resolver';
+```
 
+This defined user object will be a base for all of our examples.
+
+```javascript
 const user = {
   name: 'The Doctor',
   _links: {
