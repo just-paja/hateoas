@@ -48,6 +48,21 @@ const getMatchQuotient = (options, params) => (
   params ? options.filter(option => option in params).length : 0
 );
 
+const findBestTemplatedLinkForParams = (linkList, params) => linkList
+  .map(mapLink => mapLink.href)
+  .filter(mapLink => mapLink)
+  .map(getLinkOptions)
+  .reduce((bestLink, currentLink) => {
+    const linkDescriptor = {
+      ...currentLink,
+      matchQuotient: getMatchQuotient(currentLink.options, params),
+    };
+    if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
+      return linkDescriptor;
+    }
+    return bestLink;
+  }, null);
+
 const translateArrayIntoLink = (linkList, params) => {
   if (!params) {
     const link = linkList.find(linkCheck => !linkCheck.templated);
@@ -55,20 +70,7 @@ const translateArrayIntoLink = (linkList, params) => {
       return translateLink(link, params);
     }
   }
-  const link = linkList
-    .map(mapLink => mapLink.href)
-    .filter(mapLink => mapLink)
-    .map(getLinkOptions)
-    .reduce((bestLink, currentLink) => {
-      const linkDescriptor = {
-        ...currentLink,
-        matchQuotient: getMatchQuotient(currentLink.options, params),
-      };
-      if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
-        return linkDescriptor;
-      }
-      return bestLink;
-    }, null);
+  const link = findBestTemplatedLinkForParams(linkList, params);
   return link ?
     translateDestructuredLink(link.url, link.options, params) :
     null;
