@@ -76,19 +76,23 @@ const translateArrayIntoLink = (linkList, params) => {
     null;
 };
 
-export default (links, linkName, params) => {
+export default (object, linkName, params) => {
   if (!linkName) {
     throw new Error('No link name was passed to hal link resolver');
   }
-  if (links && links[linkName]) {
-    if (typeof links[linkName] === 'string') {
-      return links[linkName];
-    } else if (links[linkName] instanceof Array) {
-      if (links[linkName].length > 0) {
-        return translateArrayIntoLink(links[linkName], params);
+  if (object) {
+    // eslint-disable-next-line no-underscore-dangle
+    const links = object._links || object.links || object;
+    if (links[linkName]) {
+      if (typeof links[linkName] === 'string') {
+        return links[linkName];
+      } else if (links[linkName] instanceof Array) {
+        if (links[linkName].length > 0) {
+          return translateArrayIntoLink(links[linkName], params);
+        }
+      } else if (links[linkName] instanceof Object) {
+        return translateLink(links[linkName], params);
       }
-    } else if (typeof links[linkName] === 'object') {
-      return translateLink(links[linkName], params);
     }
   }
   return null;

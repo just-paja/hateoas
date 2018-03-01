@@ -1,6 +1,15 @@
 import getHalLink from '..';
 
 describe('HAL link with single links', () => {
+  it('returns directly link URL when required key is string when object has _links', () => {
+    const object = {
+      _links: {
+        emptyKey: 'http://example.com/api/users',
+      },
+    };
+    expect(getHalLink(object, 'emptyKey')).toBe('http://example.com/api/users');
+  });
+
   it('returns directly link URL when required key is string', () => {
     const links = {
       emptyKey: 'http://example.com/api/users',

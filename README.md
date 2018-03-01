@@ -120,6 +120,15 @@ resolve(user._links, 'enemies', {
 // https://example.com/characters/1/enemies?race=timelord&page=10&size=5
 ```
 
+### Object shortcut
+
+If your API uses `_links` or `links` to provide HAL links, you can simply pass the object to get branch shortcut.
+
+```javascript
+resolve(user, 'self');
+// https://example.com/characters/1
+```
+
 ## See also
 
 [Query String Manipulator](https://www.npmjs.com/package/query-string-manipulator) used as dependency in this project for quick and easy URL query transformations.
