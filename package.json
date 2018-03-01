@@ -1,0 +1,62 @@
+{
+  "name": "hateoas-hal-link-resolver",
+  "version": "0.1.0",
+  "description": "Restart your failed sagas and report errors into logs",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel -d lib src --ignore *test*",
+    "clean": "rimraf lib",
+    "prepack": "npm test && npm run build",
+    "pretest": "eslint src",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/just-paja/hateoas-hal-link-resolver.git"
+  },
+  "keywords": [
+    "redux",
+    "saga",
+    "restart",
+    "log",
+    "error"
+  ],
+  "author": "Pavel Žák <pavel@zak.global>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/just-paja/hateoas-hal-link-resolver/issues"
+  },
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "homepage": "https://github.com/just-paja/hateoas-hal-link-resolver#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-jest": "^22.4.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "codeclimate-test-reporter": "^0.5.0",
+    "eslint": "^4.18.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-filenames": "^1.2.0",
+    "eslint-plugin-import": "^2.9.0",
+    "eslint-plugin-jest": "^21.12.2",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.7.0",
+    "jest": "^22.4.2",
+    "sinon": "^4.4.1"
+  },
+  "peerDependencies": {},
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}"
+    ]
+  },
+  "dependencies": {
+    "query-string-manipulator": "^1.0.1"
+  }
+}
