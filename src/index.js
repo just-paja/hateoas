@@ -83,6 +83,13 @@ export default (object, linkName, params) => {
   if (object) {
     // eslint-disable-next-line no-underscore-dangle
     const links = object._links || object.links || object;
+    if (links instanceof Array) {
+      const link = links.find(item => item.rel === linkName);
+      if (link) {
+        return link.href ? link.href : null;
+      }
+      return null;
+    }
     if (links[linkName]) {
       if (typeof links[linkName] === 'string') {
         return links[linkName];
