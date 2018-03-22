@@ -1,6 +1,6 @@
 {
   "name": "hateoas-hal-link-resolver",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Restart your failed sagas and report errors into logs",
   "main": "lib/index.js",
   "scripts": {
