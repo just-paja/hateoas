@@ -57,6 +57,6 @@
     ]
   },
   "dependencies": {
-    "query-string-manipulator": "^1.0.1"
+    "query-string-manipulator": "^1.0.4"
   }
 }
