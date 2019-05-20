@@ -7,7 +7,6 @@
     "build": "babel -d lib src --ignore *test*",
     "clean": "rimraf lib",
     "prepack": "npm test && npm run build",
-    "pretest": "eslint src",
     "test": "jest"
   },
   "repository": {
@@ -36,23 +35,28 @@
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
+    "babel-eslint": "^10.0.1",
     "babel-jest": "^24.8.0",
     "codeclimate-test-reporter": "^0.5.0",
-    "eslint": "^4.18.1",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-filenames": "^1.2.0",
-    "eslint-plugin-import": "^2.9.0",
-    "eslint-plugin-jest": "^21.12.2",
-    "eslint-plugin-jsx-a11y": "^6.0.3",
-    "eslint-plugin-react": "^7.7.0",
     "jest": "^24.8.0",
-    "sinon": "^4.4.1"
+    "jest-runner-standard": "0.0.12",
+    "sinon": "^4.4.1",
+    "standard": "^12.0.1"
   },
   "peerDependencies": {},
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.{js,jsx}"
     ]
+  },
+  "standard": {
+    "env": [
+      "jest"
+    ],
+    "ignore": [
+      "lib/**/*"
+    ],
+    "parser": "babel-eslint"
   },
   "dependencies": {
     "query-string-manipulator": "^1.0.4"
