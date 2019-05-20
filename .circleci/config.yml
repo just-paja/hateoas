@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:7.10
+      - image: circleci/node:10
 
     working_directory: ~/repo
 
@@ -10,18 +10,26 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - dependencies-
+          - dependencies-{{ checksum "package-lock.json" }}
 
       - run:
           name: Install dependencies
-          command: npm install
+          command: npm ci
 
       - save_cache:
           paths:
             - node_modules
-          key: dependencies-{{ checksum "package.json" }}
+          key: dependencies-{{ checksum "package-lock.json" }}
+
+      - run:
+          name: Install test reporter
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
+
+      - run:
+          name: Run test reporter
+          command: ./cc-test-reporter before-build
 
       - run:
           name: Run tests
@@ -29,8 +37,7 @@ jobs:
 
       - run:
           name: Publish coverage
-          command:
-            if [[ "$CODECLIMATE_REPO_TOKEN" ]]; then ./node_modules/.bin/codeclimate-test-reporter < coverage/lcov.info; fi
+          command: ./cc-test-reporter after-build
 
       - run:
           name: Builds
