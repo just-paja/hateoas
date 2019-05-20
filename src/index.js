@@ -1,106 +1,112 @@
-import qsm from 'query-string-manipulator';
+import qsm from 'query-string-manipulator'
 
-const HAL_OPTIONS_START_TOKEN = '{?';
+const HAL_OPTIONS_START_TOKEN = '{?'
 
-const getLinkOptions = (link) => {
-  const optionsStart = link.indexOf(HAL_OPTIONS_START_TOKEN);
+function getLinkOptions (link) {
+  const optionsStart = link.indexOf(HAL_OPTIONS_START_TOKEN)
   if (optionsStart !== -1) {
-    const strippedLink = link.substr(0, optionsStart);
-    const optionsStr = link.substr(optionsStart + HAL_OPTIONS_START_TOKEN.length).split('}')[0];
+    const strippedLink = link.substr(0, optionsStart)
+    const optionsStr = link.substr(optionsStart + HAL_OPTIONS_START_TOKEN.length).split('}')[0]
     return {
       url: strippedLink,
-      options: optionsStr.split(','),
-    };
+      options: optionsStr.split(',')
+    }
   }
-  return { url: link, options: [] };
-};
+  return { url: link, options: [] }
+}
 
-const translateDestructuredLink = (url, options, params) => (
-  params ? qsm(url, {
-    set: options
-      .filter(option => option in params)
-      .reduce((aggr, option) => ({
-        ...aggr,
-        [option]: params[option],
-      }), {}),
-  }) : url
-);
+function translateDestructuredLink (url, options, params) {
+  return params
+    ? qsm(url, {
+      set: options
+        .filter(option => option in params)
+        .reduce((aggr, option) => ({
+          ...aggr,
+          [option]: params[option]
+        }), {})
+    })
+    : url
+}
 
-const translateTemplatedLink = (link, params) => {
-  const { url, options } = getLinkOptions(link.href);
-  if (params) {
-    return translateDestructuredLink(url, options, params);
-  }
-  return url;
-};
+function translateTemplatedLink (link, params) {
+  const { url, options } = getLinkOptions(link.href)
+  return params
+    ? translateDestructuredLink(url, options, params)
+    : url
+}
 
-const translateLink = (link, params) => {
+function translateLink (link, params) {
   if (!link.href) {
-    return null;
+    return null
   }
   if (link.templated) {
-    return translateTemplatedLink(link, params);
+    return translateTemplatedLink(link, params)
   }
-  return link.href;
-};
+  return link.href
+}
 
-const getMatchQuotient = (options, params) => (
-  params ? options.filter(option => option in params).length : 0
-);
+function getMatchQuotient (options, params) {
+  return params
+    ? options.filter(option => option in params).length
+    : 0
+}
 
-const findBestTemplatedLinkForParams = (linkList, params) => linkList
-  .map(mapLink => mapLink.href)
-  .filter(mapLink => mapLink)
-  .map(getLinkOptions)
-  .reduce((bestLink, currentLink) => {
-    const linkDescriptor = {
-      ...currentLink,
-      matchQuotient: getMatchQuotient(currentLink.options, params),
-    };
-    if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
-      return linkDescriptor;
-    }
-    return bestLink;
-  }, null);
+function findBestTemplatedLinkForParams (linkList, params) {
+  return linkList
+    .map(mapLink => mapLink.href)
+    .filter(mapLink => mapLink)
+    .map(getLinkOptions)
+    .reduce((bestLink, currentLink) => {
+      const linkDescriptor = {
+        ...currentLink,
+        matchQuotient: getMatchQuotient(currentLink.options, params)
+      }
+      if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
+        return linkDescriptor
+      }
+      return bestLink
+    }, null)
+}
 
-const translateArrayIntoLink = (linkList, params) => {
+function translateArrayIntoLink (linkList, params) {
   if (!params) {
-    const link = linkList.find(linkCheck => !linkCheck.templated);
+    const link = linkList.find(linkCheck => !linkCheck.templated)
     if (link) {
-      return translateLink(link, params);
+      return translateLink(link, params)
     }
   }
-  const link = findBestTemplatedLinkForParams(linkList, params);
-  return link ?
-    translateDestructuredLink(link.url, link.options, params) :
-    null;
-};
+  const link = findBestTemplatedLinkForParams(linkList, params)
+  return link
+    ? translateDestructuredLink(link.url, link.options, params)
+    : null
+}
 
-export default (object, linkName, params) => {
+export function resolve (object, linkName, params) {
   if (!linkName) {
-    throw new Error('No link name was passed to hal link resolver');
+    throw new Error('No link name was passed to hal link resolver')
   }
   if (object) {
-    // eslint-disable-next-line no-underscore-dangle
-    const links = object._links || object.links || object;
+    const links = object._links || object.links || object
     if (links instanceof Array) {
-      const link = links.find(item => item.rel === linkName);
+      const link = links.find(item => item.rel === linkName)
       if (link) {
-        return link.href ? link.href : null;
+        return link.href ? link.href : null
       }
-      return null;
+      return null
     }
     if (links[linkName]) {
       if (typeof links[linkName] === 'string') {
-        return links[linkName];
+        return links[linkName]
       } else if (links[linkName] instanceof Array) {
         if (links[linkName].length > 0) {
-          return translateArrayIntoLink(links[linkName], params);
+          return translateArrayIntoLink(links[linkName], params)
         }
       } else if (links[linkName] instanceof Object) {
-        return translateLink(links[linkName], params);
+        return translateLink(links[linkName], params)
       }
     }
   }
-  return null;
-};
+  return null
+}
+
+export default resolve
