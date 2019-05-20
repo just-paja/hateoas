@@ -1,6 +1,3 @@
 {
-  "plugins": [
-    "transform-object-rest-spread"
-  ],
-	"presets":["env"]
+	"presets":["@babel/preset-env"]
 }
