@@ -6,17 +6,26 @@ module.exports = {
       testMatch: [
         '<rootDir>/**/*.{js,jsx}'
       ],
-      testPathIgnorePatterns: ['<rootDir>/node_modules/']
+      testPathIgnorePatterns: [
+        '<rootDir>/node_modules/',
+        '<rootDir>/lib/'
+      ]
     },
     {
       displayName: 'project',
-      testPathIgnorePatterns: ['<rootDir>/node_modules/'],
+      testPathIgnorePatterns: [
+        '<rootDir>/node_modules/',
+        '<rootDir>/lib/'
+      ],
       collectCoverageFrom: [
         'src/**/*.{js,jsx}'
       ],
-      coveragePathIgnorePatterns: ['/node_modules/'],
+      coveragePathIgnorePatterns: [
+        '/node_modules/',
+        '/lib/'
+      ],
       transform: {
-        '^.+\\.(js|jsx)$': 'babel-jest',
+        '^.+\\.(js|jsx)$': 'babel-jest'
       }
     }
   ]
