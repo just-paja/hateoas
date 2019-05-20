@@ -81,6 +81,24 @@ function translateArrayIntoLink (linkList, params) {
     : null
 }
 
+function resolveLinksArray (links, linkName) {
+  const link = links.find(item => item.rel === linkName)
+  return (link && link.href) || null
+}
+
+function resolveNamedLink (link, params) {
+  if (typeof link === 'string') {
+    return link
+  } else if (link instanceof Array) {
+    if (link.length > 0) {
+      return translateArrayIntoLink(link, params)
+    }
+  } else if (link instanceof Object) {
+    return translateLink(link, params)
+  }
+  return null
+}
+
 export function resolve (object, linkName, params) {
   if (!linkName) {
     throw new Error('No link name was passed to hal link resolver')
@@ -88,22 +106,10 @@ export function resolve (object, linkName, params) {
   if (object) {
     const links = object._links || object.links || object
     if (links instanceof Array) {
-      const link = links.find(item => item.rel === linkName)
-      if (link) {
-        return link.href ? link.href : null
-      }
-      return null
+      return resolveLinksArray(links, linkName)
     }
     if (links[linkName]) {
-      if (typeof links[linkName] === 'string') {
-        return links[linkName]
-      } else if (links[linkName] instanceof Array) {
-        if (links[linkName].length > 0) {
-          return translateArrayIntoLink(links[linkName], params)
-        }
-      } else if (links[linkName] instanceof Object) {
-        return translateLink(links[linkName], params)
-      }
+      return resolveNamedLink(links[linkName], params)
     }
   }
   return null
