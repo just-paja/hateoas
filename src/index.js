@@ -99,20 +99,24 @@ function resolveNamedLink (link, params) {
   return null
 }
 
+function resolveLinksObject (object, linkName, params) {
+  const links = object._links || object.links || object
+  if (links instanceof Array) {
+    return resolveLinksArray(links, linkName)
+  }
+  if (links[linkName]) {
+    return resolveNamedLink(links[linkName], params)
+  }
+  return null
+}
+
 export function resolve (object, linkName, params) {
   if (!linkName) {
     throw new Error('No link name was passed to hal link resolver')
   }
-  if (object) {
-    const links = object._links || object.links || object
-    if (links instanceof Array) {
-      return resolveLinksArray(links, linkName)
-    }
-    if (links[linkName]) {
-      return resolveNamedLink(links[linkName], params)
-    }
-  }
-  return null
+  return object
+    ? resolveLinksObject(object, linkName, params)
+    : null
 }
 
 export default resolve
