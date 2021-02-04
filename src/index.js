@@ -1,12 +1,24 @@
 import qsm from 'query-string-manipulator'
 
 const HAL_EXPANSION_TOKEN = '{?'
+const HAL_CONTINUATION_TOKEN = '{&'
+const tokens = [HAL_EXPANSION_TOKEN, HAL_CONTINUATION_TOKEN]
+
+function getOptionsToken (link) {
+  for (const token of tokens) {
+    const index = link.indexOf(token)
+    if (index !== -1) {
+      return [token, index]
+    }
+  }
+  return [null, 0]
+}
 
 function getLinkOptions (link) {
-  const optionsStart = link.indexOf(HAL_EXPANSION_TOKEN)
-  if (optionsStart !== -1) {
-    const strippedLink = link.substr(0, optionsStart)
-    const optionsStr = link.substr(optionsStart + HAL_EXPANSION_TOKEN.length).split('}')[0]
+  const [token, tokenIndex] = getOptionsToken(link)
+  if (token) {
+    const strippedLink = link.substr(0, tokenIndex)
+    const optionsStr = link.substr(tokenIndex + token.length).split('}')[0]
     return {
       url: strippedLink,
       options: optionsStr.split(',')

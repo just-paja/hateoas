@@ -121,4 +121,60 @@ describe('HAL link with single links', () => {
       name: 'John'
     })).toBe('http://example.com/api/users?projection=users&page=201&size=13')
   })
+
+  it('returns URL with single translated HAL continuation param', () => {
+    const links = {
+      groups: {
+        href: 'http://example.com/api/users?all=true{&projection}',
+        templated: true
+      }
+    }
+    expect(getHalLink(links, 'groups', {
+      projection: 'users'
+    })).toBe('http://example.com/api/users?all=true&projection=users')
+  })
+
+  it('returns URL with multiple translated HAL continuation params', () => {
+    const links = {
+      groups: {
+        href: 'http://example.com/api/users?all=true{&projection,page,size}',
+        templated: true
+      }
+    }
+    expect(getHalLink(links, 'groups', {
+      page: 201,
+      size: 13,
+      projection: 'users'
+    })).toBe('http://example.com/api/users?all=true&projection=users&page=201&size=13')
+  })
+
+  it('returns URL with multiple translated HAL continuation params without unused options', () => {
+    const links = {
+      groups: {
+        href: 'http://example.com/api/users?all=true{&projection,page,size,filter,name}',
+        templated: true
+      }
+    }
+    expect(getHalLink(links, 'groups', {
+      page: 201,
+      size: 13,
+      projection: 'users'
+    })).toBe('http://example.com/api/users?all=true&projection=users&page=201&size=13')
+  })
+
+  it('returns URL with multiple translated HAL continuation params without unused params', () => {
+    const links = {
+      groups: {
+        href: 'http://example.com/api/users?all=true{&projection,page,size}',
+        templated: true
+      }
+    }
+    expect(getHalLink(links, 'groups', {
+      page: 201,
+      size: 13,
+      projection: 'users',
+      filter: 'testFilter',
+      name: 'John'
+    })).toBe('http://example.com/api/users?all=true&projection=users&page=201&size=13')
+  })
 })
