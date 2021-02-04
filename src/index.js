@@ -16,8 +16,8 @@ function getLinkOptions (link) {
 }
 
 function translateDestructuredLink (url, options, params) {
-  return params
-    ? qsm(url, {
+  if (params) {
+    return qsm(url, {
       set: options
         .filter(option => option in params)
         .reduce((aggr, option) => ({
@@ -25,7 +25,8 @@ function translateDestructuredLink (url, options, params) {
           [option]: params[option]
         }), {})
     })
-    : url
+  }
+  return url
 }
 
 function translateTemplatedLink (link, params) {
