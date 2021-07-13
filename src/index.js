@@ -1,45 +1,62 @@
-import qsm from 'query-string-manipulator'
+const EXPANSION_REGEX = /(?<=\{)[^{]*(?=\})/g
 
-const EXPANSION_REGEX = /(?<=\{)[^\{]*(?=\})/g
-
+const DEFAULT_OPERATOR =
+  { operator: '', separator: ',', named: false, ifEmpty: false }
 const OPERATORS = [
-  { 'operator': '+', 'separator': ',', includeVarName: false },
-  { 'operator': '#', 'separator': ',', includeVarName: false },
-  { 'operator': '.', 'separator': '.', includeVarName: false },
-  { 'operator': '/', 'separator': '/', includeVarName: false },
-  { 'operator': ';', 'separator': ';', includeVarName: true },
-  { 'operator': '?', 'separator': '&', includeVarName: true },
-  { 'operator': '&', 'separator': '&', includeVarName: true },
+  { operator: '#', separator: ',', named: false, ifEmpty: false },
+  { operator: '.', separator: '.', named: false, ifEmpty: false },
+  { operator: '/', separator: '/', named: false, ifEmpty: false },
+  { operator: ';', separator: ';', named: true, ifEmpty: false },
+  { operator: '?', separator: '&', named: true, ifEmpty: true },
+  { operator: '&', separator: '&', named: true, ifEmpty: true }
 ]
 
-// TODO
-function isExploded (variable) {
-  return variable.endsWith('*')
-}
-
-function getValueFor (args, varName) {
+function getValueFor (args, varName, operator) {
   if (args[varName] instanceof Array) {
     return args[varName].flatMap(el => {
-      if (el instanceof Object) {
-        return Object.keys(el).map(
-          k => `${k},${el[k]}`)
-      }
-      return [el]
-    })
+      return [`${operator.named ? `${varName}=` : ''}${el}`]
+    }).join(operator.separator)
   }
-  if (args[varName] instanceof Object) {
-    return Object.keys(args[varName]).map(k => `${k},${arguments[varName][k]}`)
-  }
-  return [`${args[varName]}`]
+  return `${operator.named
+    ? `${varName}=`
+    : ''}${[`${args[varName]}`].join(operator.separator)}`
 }
 
-function containsArgument (args, v) {
-  return !!args[v]
+function containsArgument (args, v, canBeEmpty) {
+  console.log(args, !!args, typeof args[v], args[v])
+  if (canBeEmpty) {
+    return !!args && typeof args[v] !== 'undefined'
+  }
+  return !!args && !!args[v]
 }
 
-function getOptionsToken (link, args) {
+function getLinkOptions (link) {
+  const groups = link.match(EXPANSION_REGEX)
+  if (groups) {
+    return {
+      url: link,
+      options: groups.flatMap(str => str.split(','))
+        .map(str => {
+          if (OPERATORS.some(operator => str.startsWith(operator.operator))) {
+            return str.slice(1)
+          }
+          return str
+        })
+    }
+  }
+  return {
+    url: link,
+    options: []
+  }
+}
+
+function translateTemplatedLink (link, args) {
   let returnLink = link
-  link.match(EXPANSION_REGEX).forEach(str => {
+  const groups = link.match(EXPANSION_REGEX)
+  if (!groups) {
+    return link
+  }
+  groups.forEach(str => {
     const ops = OPERATORS.filter(operator => str.startsWith(operator.operator))
     if (ops.length > 1) {
       throw new Error(`${str} starts with more than one operator`)
@@ -47,55 +64,21 @@ function getOptionsToken (link, args) {
     if (ops.length === 0) {
       returnLink = returnLink.replace(`{${str}}`,
         str.split(',').filter(v => containsArgument(args, v)).flatMap(
-          v => getValueFor(args, v, ',')).join(','))
+          v => getValueFor(args, v, DEFAULT_OPERATOR)).join(','))
     } else {
+      const argumentList = str.slice(1).split(',').filter(
+        v => {
+          console.log(containsArgument(args, v, ops[0].ifEmpty), ops[0].ifEmpty)
+          return containsArgument(args, v, ops[0].ifEmpty)
+        }).map(
+        v => {
+          return `${getValueFor(args, v, ops[0])}`
+        }).join(ops[0].separator)
       returnLink = returnLink.replace(`{${str}}`,
-        `${ops[0].operator}${str.slice(1).split(',').filter(
-          v => containsArgument(args, v)).map(
-          v => {
-            if (ops[0].includeVarName) {
-              return `${v}=${getValueFor(args, v, ops[0])}`
-            } else {
-              return `${getValueFor(args, v, ops[0])}`
-            }
-          }).join(ops[0].separator)}`)
+        `${argumentList.length > 0 ? ops[0].operator : ''}${argumentList}`)
     }
   })
   return returnLink
-}
-
-function getLinkOptions (link) {
-  const [token, tokenIndex] = getOptionsToken(link)
-  if (token) {
-    const strippedLink = link.substr(0, tokenIndex)
-    const optionsStr = link.substr(tokenIndex + token.length).split('}')[0]
-    return {
-      url: strippedLink,
-      options: optionsStr.split(',')
-    }
-  }
-  return { url: link, options: [] }
-}
-
-function translateDestructuredLink (url, options, params) {
-  if (params) {
-    return qsm(url, {
-      set: options
-      .filter(option => option in params)
-      .reduce((aggr, option) => ({
-        ...aggr,
-        [option]: params[option]
-      }), {})
-    })
-  }
-  return url
-}
-
-function translateTemplatedLink (link, params) {
-  const { url, options } = getLinkOptions(link.href)
-  return params
-    ? translateDestructuredLink(url, options, params)
-    : url
 }
 
 function translateLink (link, params) {
@@ -103,7 +86,7 @@ function translateLink (link, params) {
     return null
   }
   if (link.templated) {
-    return translateTemplatedLink(link, params)
+    return translateTemplatedLink(link.href, params)
   }
   return link.href
 }
@@ -116,19 +99,19 @@ function getMatchQuotient (options, params) {
 
 function findBestTemplatedLinkForParams (linkList, params) {
   return linkList
-  .map(mapLink => mapLink.href)
-  .filter(mapLink => mapLink)
-  .map(getLinkOptions)
-  .reduce((bestLink, currentLink) => {
-    const linkDescriptor = {
-      ...currentLink,
-      matchQuotient: getMatchQuotient(currentLink.options, params)
-    }
-    if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
-      return linkDescriptor
-    }
-    return bestLink
-  }, null)
+    .map(mapLink => mapLink.href)
+    .filter(mapLink => mapLink)
+    .map(getLinkOptions)
+    .reduce((bestLink, currentLink) => {
+      const linkDescriptor = {
+        ...currentLink,
+        matchQuotient: getMatchQuotient(currentLink.options, params)
+      }
+      if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
+        return linkDescriptor
+      }
+      return bestLink
+    }, null)
 }
 
 function translateArrayIntoLink (linkList, params) {
@@ -140,7 +123,7 @@ function translateArrayIntoLink (linkList, params) {
   }
   const link = findBestTemplatedLinkForParams(linkList, params)
   return link
-    ? translateDestructuredLink(link.url, link.options, params)
+    ? translateTemplatedLink(link.url, params)
     : null
 }
 
@@ -178,7 +161,7 @@ export function resolve (object, linkName, params) {
     throw new Error('No link name was passed to hal link resolver')
   }
   return object
-    ? resolveLinksObject(object, linkName, params)
+    ? resolveLinksObject(object, linkName, params || {})
     : null
 }
 
