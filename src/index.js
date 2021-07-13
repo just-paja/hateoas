@@ -1,17 +1,67 @@
 import qsm from 'query-string-manipulator'
 
-const HAL_EXPANSION_TOKEN = '{?'
-const HAL_CONTINUATION_TOKEN = '{&'
-const tokens = [HAL_EXPANSION_TOKEN, HAL_CONTINUATION_TOKEN]
+const EXPANSION_REGEX = /(?<=\{)[^\{]*(?=\})/g
 
-function getOptionsToken (link) {
-  for (const token of tokens) {
-    const index = link.indexOf(token)
-    if (index !== -1) {
-      return [token, index]
-    }
+const OPERATORS = [
+  { 'operator': '+', 'separator': ',', includeVarName: false },
+  { 'operator': '#', 'separator': ',', includeVarName: false },
+  { 'operator': '.', 'separator': '.', includeVarName: false },
+  { 'operator': '/', 'separator': '/', includeVarName: false },
+  { 'operator': ';', 'separator': ';', includeVarName: true },
+  { 'operator': '?', 'separator': '&', includeVarName: true },
+  { 'operator': '&', 'separator': '&', includeVarName: true },
+]
+
+// TODO
+function isExploded (variable) {
+  return variable.endsWith('*')
+}
+
+function getValueFor (args, varName) {
+  if (args[varName] instanceof Array) {
+    return args[varName].flatMap(el => {
+      if (el instanceof Object) {
+        return Object.keys(el).map(
+          k => `${k},${el[k]}`)
+      }
+      return [el]
+    })
   }
-  return [null, 0]
+  if (args[varName] instanceof Object) {
+    return Object.keys(args[varName]).map(k => `${k},${arguments[varName][k]}`)
+  }
+  return [`${args[varName]}`]
+}
+
+function containsArgument (args, v) {
+  return !!args[v]
+}
+
+function getOptionsToken (link, args) {
+  let returnLink = link
+  link.match(EXPANSION_REGEX).forEach(str => {
+    const ops = OPERATORS.filter(operator => str.startsWith(operator.operator))
+    if (ops.length > 1) {
+      throw new Error(`${str} starts with more than one operator`)
+    }
+    if (ops.length === 0) {
+      returnLink = returnLink.replace(`{${str}}`,
+        str.split(',').filter(v => containsArgument(args, v)).flatMap(
+          v => getValueFor(args, v, ',')).join(','))
+    } else {
+      returnLink = returnLink.replace(`{${str}}`,
+        `${ops[0].operator}${str.slice(1).split(',').filter(
+          v => containsArgument(args, v)).map(
+          v => {
+            if (ops[0].includeVarName) {
+              return `${v}=${getValueFor(args, v, ops[0])}`
+            } else {
+              return `${getValueFor(args, v, ops[0])}`
+            }
+          }).join(ops[0].separator)}`)
+    }
+  })
+  return returnLink
 }
 
 function getLinkOptions (link) {
@@ -31,11 +81,11 @@ function translateDestructuredLink (url, options, params) {
   if (params) {
     return qsm(url, {
       set: options
-        .filter(option => option in params)
-        .reduce((aggr, option) => ({
-          ...aggr,
-          [option]: params[option]
-        }), {})
+      .filter(option => option in params)
+      .reduce((aggr, option) => ({
+        ...aggr,
+        [option]: params[option]
+      }), {})
     })
   }
   return url
@@ -66,19 +116,19 @@ function getMatchQuotient (options, params) {
 
 function findBestTemplatedLinkForParams (linkList, params) {
   return linkList
-    .map(mapLink => mapLink.href)
-    .filter(mapLink => mapLink)
-    .map(getLinkOptions)
-    .reduce((bestLink, currentLink) => {
-      const linkDescriptor = {
-        ...currentLink,
-        matchQuotient: getMatchQuotient(currentLink.options, params)
-      }
-      if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
-        return linkDescriptor
-      }
-      return bestLink
-    }, null)
+  .map(mapLink => mapLink.href)
+  .filter(mapLink => mapLink)
+  .map(getLinkOptions)
+  .reduce((bestLink, currentLink) => {
+    const linkDescriptor = {
+      ...currentLink,
+      matchQuotient: getMatchQuotient(currentLink.options, params)
+    }
+    if (!bestLink || linkDescriptor.matchQuotient > bestLink.matchQuotient) {
+      return linkDescriptor
+    }
+    return bestLink
+  }, null)
 }
 
 function translateArrayIntoLink (linkList, params) {
