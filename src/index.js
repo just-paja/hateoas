@@ -11,19 +11,24 @@ const OPERATORS = [
   { operator: '&', separator: '&', named: true, ifEmpty: true }
 ]
 
+function getNamedOperatorIfNeeded (operator, varName, el) {
+  if (operator.named) {
+    return `${varName}=${el}`
+  }
+  return el
+}
+
 function getValueFor (args, varName, operator) {
   if (args[varName] instanceof Array) {
-    return args[varName].flatMap(el => {
-      return [`${operator.named ? `${varName}=` : ''}${el}`]
-    }).join(operator.separator)
+    return args[varName]
+      .flatMap(el => getNamedOperatorIfNeeded(operator, varName, el))
+      .join(operator.separator)
   }
-  return `${operator.named
-    ? `${varName}=`
-    : ''}${[`${args[varName]}`].join(operator.separator)}`
+  return getNamedOperatorIfNeeded(operator, varName, [`${args[varName]}`]
+    .join(operator.separator))
 }
 
 function containsArgument (args, v, canBeEmpty) {
-  console.log(args, !!args, typeof args[v], args[v])
   if (canBeEmpty) {
     return !!args && typeof args[v] !== 'undefined'
   }
@@ -50,6 +55,14 @@ function getLinkOptions (link) {
   }
 }
 
+function translateArgumentsWithOperator (str, args, operator) {
+  return str
+    .split(',')
+    .filter(v => containsArgument(args, v, operator.ifEmpty))
+    .map(v => getValueFor(args, v, operator))
+    .join(operator.separator)
+}
+
 function translateTemplatedLink (link, args) {
   let returnLink = link
   const groups = link.match(EXPANSION_REGEX)
@@ -57,25 +70,16 @@ function translateTemplatedLink (link, args) {
     return link
   }
   groups.forEach(str => {
-    const ops = OPERATORS.filter(operator => str.startsWith(operator.operator))
-    if (ops.length > 1) {
-      throw new Error(`${str} starts with more than one operator`)
-    }
-    if (ops.length === 0) {
-      returnLink = returnLink.replace(`{${str}}`,
-        str.split(',').filter(v => containsArgument(args, v)).flatMap(
-          v => getValueFor(args, v, DEFAULT_OPERATOR)).join(','))
+    const operator = OPERATORS.find(
+      operator => str.startsWith(operator.operator)) || DEFAULT_OPERATOR
+    if (!OPERATORS.some(operator => str.startsWith(operator.operator))) {
+      returnLink = returnLink
+        .replace(`{${str}}`, translateArgumentsWithOperator(str, args, operator))
     } else {
-      const argumentList = str.slice(1).split(',').filter(
-        v => {
-          console.log(containsArgument(args, v, ops[0].ifEmpty), ops[0].ifEmpty)
-          return containsArgument(args, v, ops[0].ifEmpty)
-        }).map(
-        v => {
-          return `${getValueFor(args, v, ops[0])}`
-        }).join(ops[0].separator)
+      const argumentList = translateArgumentsWithOperator(str.slice(1), args,
+        operator)
       returnLink = returnLink.replace(`{${str}}`,
-        `${argumentList.length > 0 ? ops[0].operator : ''}${argumentList}`)
+        `${argumentList.length > 0 ? operator.operator : ''}${argumentList}`)
     }
   })
   return returnLink
@@ -133,6 +137,7 @@ function resolveLinksArray (links, linkName) {
 }
 
 function resolveNamedLink (link, params) {
+  console.log(typeof link, link)
   if (typeof link === 'string') {
     return link
   } else if (link instanceof Array) {
@@ -161,7 +166,7 @@ export function resolve (object, linkName, params) {
     throw new Error('No link name was passed to hal link resolver')
   }
   return object
-    ? resolveLinksObject(object, linkName, params || {})
+    ? resolveLinksObject(object, linkName, params)
     : null
 }
 

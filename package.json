@@ -55,8 +55,5 @@
       "lib/**/*"
     ],
     "parser": "babel-eslint"
-  },
-  "dependencies": {
-    "query-string-manipulator": "^1.2.2"
   }
 }
