@@ -6,7 +6,32 @@
 
 Translate HATEOAS HAL links into URLs that can be used by your application trough one method. Handles missing links and translation of templated link options into query string parameters.
 
-It is fully compatible with [Spring Data Rest](https://projects.spring.io/spring-data-rest/) HAL layer.
+It supports following expansions of the [URI template spec](git@github.com:SBylemans/hateoas-hal-link-resolver.git):
+* `{}`
+* `{#}`
+* `{.}`
+* `{/}`
+* `{;}`
+* `{?}`
+* `{&}`
+
+Valid arguments for expansion are single string or arrays of strings. 
+When providing an array in combination with an operator, this variable will be exploded by default with the separator associated with the operator i.e.:
+
+```
+const links = {
+  _links: {
+    example: {
+      href: 'https://local{/api}{?param}'
+    }
+  }
+}
+
+resolve(links, 'example', {
+  api: ['path', 'subpath'],
+  param: ['p1', 'p2'],
+}) >> 'https://local/path/subpath?param=p1&param=p2'
+```
 
 ## Install
 
@@ -128,7 +153,3 @@ If your API uses `_links` or `links` to provide HAL links, you can simply pass t
 resolve(user, 'self');
 // https://example.com/characters/1
 ```
-
-## See also
-
-[Query String Manipulator](https://www.npmjs.com/package/query-string-manipulator) used as dependency in this project for quick and easy URL query transformations.
