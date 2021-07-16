@@ -71,34 +71,31 @@ function translateArgumentsWithOperator (str, params, operator) {
 }
 
 function translateTemplatedLink (link, params) {
-  let returnLink = link
   const groups = link.match(EXPANSION_REGEX)
   if (!groups) {
     return link
   }
-  groups.forEach(str => {
+  return groups.reduce((returnLink, str) => {
     const matchedOperator = OPERATORS.find(operator =>
       startsWith(str, operator.operator)
     )
     const operator = matchedOperator || DEFAULT_OPERATOR
     if (!matchedOperator) {
-      returnLink = returnLink.replace(
+      return returnLink.replace(
         `{${str}}`,
         translateArgumentsWithOperator(str, params, operator)
       )
-    } else {
-      const argumentList = translateArgumentsWithOperator(
-        str.slice(1),
-        params,
-        operator
-      )
-      returnLink = returnLink.replace(
-        `{${str}}`,
-        `${argumentList.length > 0 ? operator.operator : ''}${argumentList}`
-      )
     }
-  })
-  return returnLink
+    const argumentList = translateArgumentsWithOperator(
+      str.slice(1),
+      params,
+      operator
+    )
+    return returnLink.replace(
+      `{${str}}`,
+      `${argumentList.length > 0 ? operator.operator : ''}${argumentList}`
+    )
+  }, link)
 }
 
 function translateLink (link, params) {
