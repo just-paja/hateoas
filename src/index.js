@@ -26,7 +26,10 @@ function getNamedOperatorIfNeeded (operator, varName, el) {
 function getValueFor (params, varName, operator) {
   return []
     .concat(params[varName])
-    .flatMap(el => getNamedOperatorIfNeeded(operator, varName, el))
+    .reduce(
+      (acc, el) => acc.concat(getNamedOperatorIfNeeded(operator, varName, el)),
+      []
+    )
     .join(operator.separator)
 }
 
@@ -47,7 +50,7 @@ function getLinkOptions (link) {
     return {
       url: link,
       options: groups
-        .flatMap(str => str.split(','))
+        .reduce((acc, str) => acc.concat(str.split(',')), [])
         .map(str => {
           if (OPERATORS.some(operator => startsWith(str, operator.operator))) {
             return str.slice(1)
