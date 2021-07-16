@@ -6,7 +6,7 @@
 
 Translate HATEOAS HAL links into URLs that can be used by your application trough one method. Handles missing links and translation of templated link options into query string parameters.
 
-It supports following expansions of the [URI template spec](git@github.com:SBylemans/hateoas-hal-link-resolver.git):
+It supports following expansions of the [URI template spec](https://datatracker.ietf.org/doc/html/rfc6570#section-3.2.2):
 * `{}`
 * `{#}`
 * `{.}`
