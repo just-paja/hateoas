@@ -37,6 +37,10 @@ function containsParam (params, v, canBeEmpty) {
   return Boolean(params && params[v])
 }
 
+function startsWith (str, needle) {
+  return str.indexOf(needle) === 0
+}
+
 function getLinkOptions (link) {
   const groups = link.match(EXPANSION_REGEX)
   if (groups) {
@@ -45,7 +49,7 @@ function getLinkOptions (link) {
       options: groups
         .flatMap(str => str.split(','))
         .map(str => {
-          if (OPERATORS.some(operator => str.startsWith(operator.operator))) {
+          if (OPERATORS.some(operator => startsWith(str, operator.operator))) {
             return str.slice(1)
           }
           return str
@@ -74,9 +78,9 @@ function translateTemplatedLink (link, params) {
   }
   groups.forEach(str => {
     const operator =
-      OPERATORS.find(operator => str.startsWith(operator.operator)) ||
+      OPERATORS.find(operator => startsWith(str, operator.operator)) ||
       DEFAULT_OPERATOR
-    if (!OPERATORS.some(operator => str.startsWith(operator.operator))) {
+    if (!OPERATORS.some(operator => startsWith(str, operator.operator))) {
       returnLink = returnLink.replace(
         `{${str}}`,
         translateArgumentsWithOperator(str, params, operator)
