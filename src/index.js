@@ -18,21 +18,17 @@ function getNamedOperatorIfNeeded (operator, varName, el) {
   return el
 }
 
-function getValueFor (args, varName, operator) {
-  if (args[varName] instanceof Array) {
-    return args[varName]
-      .flatMap(el => getNamedOperatorIfNeeded(operator, varName, el))
-      .join(operator.separator)
-  }
-  return getNamedOperatorIfNeeded(operator, varName, [`${args[varName]}`]
-    .join(operator.separator))
+function getValueFor (params, varName, operator) {
+  return [].concat(params[varName])
+    .flatMap(el => getNamedOperatorIfNeeded(operator, varName, el))
+    .join(operator.separator)
 }
 
-function containsArgument (args, v, canBeEmpty) {
+function containsParam (params, v, canBeEmpty) {
   if (canBeEmpty) {
-    return !!args && typeof args[v] !== 'undefined'
+    return Boolean(params && typeof params[v] !== 'undefined')
   }
-  return !!args && !!args[v]
+  return Boolean(params && params[v])
 }
 
 function getLinkOptions (link) {
@@ -55,15 +51,15 @@ function getLinkOptions (link) {
   }
 }
 
-function translateArgumentsWithOperator (str, args, operator) {
+function translateArgumentsWithOperator (str, params, operator) {
   return str
     .split(',')
-    .filter(v => containsArgument(args, v, operator.ifEmpty))
-    .map(v => getValueFor(args, v, operator))
+    .filter(v => containsParam(params, v, operator.ifEmpty))
+    .map(v => getValueFor(params, v, operator))
     .join(operator.separator)
 }
 
-function translateTemplatedLink (link, args) {
+function translateTemplatedLink (link, params) {
   let returnLink = link
   const groups = link.match(EXPANSION_REGEX)
   if (!groups) {
@@ -74,9 +70,9 @@ function translateTemplatedLink (link, args) {
       operator => str.startsWith(operator.operator)) || DEFAULT_OPERATOR
     if (!OPERATORS.some(operator => str.startsWith(operator.operator))) {
       returnLink = returnLink
-        .replace(`{${str}}`, translateArgumentsWithOperator(str, args, operator))
+        .replace(`{${str}}`, translateArgumentsWithOperator(str, params, operator))
     } else {
-      const argumentList = translateArgumentsWithOperator(str.slice(1), args,
+      const argumentList = translateArgumentsWithOperator(str.slice(1), params,
         operator)
       returnLink = returnLink.replace(`{${str}}`,
         `${argumentList.length > 0 ? operator.operator : ''}${argumentList}`)
@@ -137,7 +133,6 @@ function resolveLinksArray (links, linkName) {
 }
 
 function resolveNamedLink (link, params) {
-  console.log(typeof link, link)
   if (typeof link === 'string') {
     return link
   } else if (link instanceof Array) {
