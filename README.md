@@ -1,9 +1,9 @@
 # hateoas-hal-link-resolver
 
+[![npm version](https://badge.fury.io/js/hateoas-hal-link-resolver.svg)](https://badge.fury.io/js/hateoas-hal-link-resolver)
 [![Continuous integration status](https://github.com/just-paja/hateoas-hal-link-resolver/actions/workflows/integration.yml/badge.svg)](https://github.com/just-paja/hateoas-hal-link-resolver/actions/workflows/integration.yml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/39a91265618bf728f48d/maintainability)](https://codeclimate.com/github/just-paja/hateoas-hal-link-resolver/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/39a91265618bf728f48d/test_coverage)](https://codeclimate.com/github/just-paja/hateoas-hal-link-resolver/test_coverage)
-[![npm version](https://badge.fury.io/js/hateoas-hal-link-resolver.svg)](https://badge.fury.io/js/hateoas-hal-link-resolver)
 
 Translate HATEOAS HAL links into URLs that can be used by your application trough one method. Handles missing links and translation of templated link options into query string parameters.
 
