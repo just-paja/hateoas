@@ -1,51 +1,84 @@
-import qsm from 'query-string-manipulator'
+const EXPANSION_REGEX = /(?<=\{)[^{]*(?=\})/g
 
-const HAL_EXPANSION_TOKEN = '{?'
-const HAL_CONTINUATION_TOKEN = '{&'
-const tokens = [HAL_EXPANSION_TOKEN, HAL_CONTINUATION_TOKEN]
+const DEFAULT_OPERATOR =
+  { operator: '', separator: ',', named: false, ifEmpty: false }
+const OPERATORS = [
+  { operator: '#', separator: ',', named: false, ifEmpty: false },
+  { operator: '.', separator: '.', named: false, ifEmpty: false },
+  { operator: '/', separator: '/', named: false, ifEmpty: false },
+  { operator: ';', separator: ';', named: true, ifEmpty: false },
+  { operator: '?', separator: '&', named: true, ifEmpty: true },
+  { operator: '&', separator: '&', named: true, ifEmpty: true }
+]
 
-function getOptionsToken (link) {
-  for (const token of tokens) {
-    const index = link.indexOf(token)
-    if (index !== -1) {
-      return [token, index]
-    }
+function getNamedOperatorIfNeeded (operator, varName, el) {
+  if (operator.named) {
+    return `${varName}=${el}`
   }
-  return [null, 0]
+  return el
+}
+
+function getValueFor (params, varName, operator) {
+  return [].concat(params[varName])
+    .flatMap(el => getNamedOperatorIfNeeded(operator, varName, el))
+    .join(operator.separator)
+}
+
+function containsParam (params, v, canBeEmpty) {
+  if (canBeEmpty) {
+    return Boolean(params && typeof params[v] !== 'undefined')
+  }
+  return Boolean(params && params[v])
 }
 
 function getLinkOptions (link) {
-  const [token, tokenIndex] = getOptionsToken(link)
-  if (token) {
-    const strippedLink = link.substr(0, tokenIndex)
-    const optionsStr = link.substr(tokenIndex + token.length).split('}')[0]
+  const groups = link.match(EXPANSION_REGEX)
+  if (groups) {
     return {
-      url: strippedLink,
-      options: optionsStr.split(',')
+      url: link,
+      options: groups.flatMap(str => str.split(','))
+        .map(str => {
+          if (OPERATORS.some(operator => str.startsWith(operator.operator))) {
+            return str.slice(1)
+          }
+          return str
+        })
     }
   }
-  return { url: link, options: [] }
+  return {
+    url: link,
+    options: []
+  }
 }
 
-function translateDestructuredLink (url, options, params) {
-  if (params) {
-    return qsm(url, {
-      set: options
-        .filter(option => option in params)
-        .reduce((aggr, option) => ({
-          ...aggr,
-          [option]: params[option]
-        }), {})
-    })
-  }
-  return url
+function translateArgumentsWithOperator (str, params, operator) {
+  return str
+    .split(',')
+    .filter(v => containsParam(params, v, operator.ifEmpty))
+    .map(v => getValueFor(params, v, operator))
+    .join(operator.separator)
 }
 
 function translateTemplatedLink (link, params) {
-  const { url, options } = getLinkOptions(link.href)
-  return params
-    ? translateDestructuredLink(url, options, params)
-    : url
+  let returnLink = link
+  const groups = link.match(EXPANSION_REGEX)
+  if (!groups) {
+    return link
+  }
+  groups.forEach(str => {
+    const operator = OPERATORS.find(
+      operator => str.startsWith(operator.operator)) || DEFAULT_OPERATOR
+    if (!OPERATORS.some(operator => str.startsWith(operator.operator))) {
+      returnLink = returnLink
+        .replace(`{${str}}`, translateArgumentsWithOperator(str, params, operator))
+    } else {
+      const argumentList = translateArgumentsWithOperator(str.slice(1), params,
+        operator)
+      returnLink = returnLink.replace(`{${str}}`,
+        `${argumentList.length > 0 ? operator.operator : ''}${argumentList}`)
+    }
+  })
+  return returnLink
 }
 
 function translateLink (link, params) {
@@ -53,7 +86,7 @@ function translateLink (link, params) {
     return null
   }
   if (link.templated) {
-    return translateTemplatedLink(link, params)
+    return translateTemplatedLink(link.href, params)
   }
   return link.href
 }
@@ -90,7 +123,7 @@ function translateArrayIntoLink (linkList, params) {
   }
   const link = findBestTemplatedLinkForParams(linkList, params)
   return link
-    ? translateDestructuredLink(link.url, link.options, params)
+    ? translateTemplatedLink(link.url, params)
     : null
 }
 
