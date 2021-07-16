@@ -6,7 +6,6 @@
   "scripts": {
     "build": "babel -d lib src --ignore *test*",
     "clean": "rimraf lib",
-    "prepack": "npm test && npm run build",
     "test": "jest"
   },
   "repository": {
