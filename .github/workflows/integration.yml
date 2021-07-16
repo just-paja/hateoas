@@ -31,4 +31,4 @@ jobs:
       - uses: paambaati/codeclimate-action@v2.2.4
         if: github.ref == 'refs/heads/master'
         env:
-          CC_TEST_REPORTER_ID: ${{CC_TEST_REPORTER_ID}}
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
