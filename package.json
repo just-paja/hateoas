@@ -25,7 +25,7 @@
     "url": "https://github.com/just-paja/hateoas-hal-link-resolver/issues"
   },
   "files": [
-    "lib",
+    "lib/*.js",
     "LICENSE",
     "README.md"
   ],
