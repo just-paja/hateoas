@@ -28,6 +28,6 @@ jobs:
       - name: Build the package
         run: npm run build
       - name: Publish packages
-        run: npm run publish-all -- --yes
+        run: npm run publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_KEY }}
