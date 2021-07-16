@@ -77,10 +77,11 @@ function translateTemplatedLink (link, params) {
     return link
   }
   groups.forEach(str => {
-    const operator =
-      OPERATORS.find(operator => startsWith(str, operator.operator)) ||
-      DEFAULT_OPERATOR
-    if (!OPERATORS.some(operator => startsWith(str, operator.operator))) {
+    const matchedOperator = OPERATORS.find(operator =>
+      startsWith(str, operator.operator)
+    )
+    const operator = matchedOperator || DEFAULT_OPERATOR
+    if (!matchedOperator) {
       returnLink = returnLink.replace(
         `{${str}}`,
         translateArgumentsWithOperator(str, params, operator)
