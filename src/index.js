@@ -160,8 +160,12 @@ function resolveNamedLink (link, params) {
   return null
 }
 
+function getObjectLinks (object) {
+  return object._links || object.links || object
+}
+
 function resolveLinksObject (object, linkName, params) {
-  const links = object._links || object.links || object
+  const links = getObjectLinks(object)
   if (links instanceof Array) {
     return resolveLinksArray(links, linkName)
   }
