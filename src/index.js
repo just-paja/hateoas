@@ -1,4 +1,5 @@
-const EXPANSION_REGEX = /(?<=\{)[^{]*(?=\})/g
+// Cannot use lookbehind in regex because of safari
+const EXPANSION_REGEX = /(\{)[^{]*(\})/g
 
 const DEFAULT_OPERATOR = {
   operator: '',
@@ -50,7 +51,8 @@ function getLinkOptions (link) {
     return {
       url: link,
       options: groups
-        .reduce((acc, str) => acc.concat(str.split(',')), [])
+      // need to slice of the surrounding '{' and '}' -> slice(1, -1)
+        .reduce((acc, str) => acc.concat(str.slice(1, -1).split(',')), [])
         .map(str => {
           if (OPERATORS.some(operator => startsWith(str, operator.operator))) {
             return str.slice(1)
@@ -79,23 +81,25 @@ function translateTemplatedLink (link, params) {
     return link
   }
   return groups.reduce((returnLink, str) => {
+    // need to slice of the surrounding '{' and '}' -> slice(1, -1)
+    const slicedStr = str.slice(1, -1)
     const matchedOperator = OPERATORS.find(operator =>
-      startsWith(str, operator.operator)
+      startsWith(slicedStr, operator.operator)
     )
     const operator = matchedOperator || DEFAULT_OPERATOR
     if (!matchedOperator) {
       return returnLink.replace(
-        `{${str}}`,
-        translateArgumentsWithOperator(str, params, operator)
+        `{${slicedStr}}`,
+        translateArgumentsWithOperator(slicedStr, params, operator)
       )
     }
     const argumentList = translateArgumentsWithOperator(
-      str.slice(1),
+      slicedStr.slice(1),
       params,
       operator
     )
     return returnLink.replace(
-      `{${str}}`,
+      `{${slicedStr}}`,
       `${argumentList.length > 0 ? operator.operator : ''}${argumentList}`
     )
   }, link)

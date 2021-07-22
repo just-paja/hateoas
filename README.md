@@ -19,7 +19,7 @@ It supports following expansions of the [URI template spec](https://datatracker.
 Valid arguments for expansion are single string or arrays of strings. 
 When providing an array in combination with an operator, this variable will be exploded by default with the separator associated with the operator i.e.:
 
-```
+```javascript
 const links = {
   _links: {
     example: {
