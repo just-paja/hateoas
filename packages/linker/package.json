@@ -1,0 +1,30 @@
+{
+  "name": "@hateoas/linker",
+  "version": "1.0.4",
+  "type": "module",
+  "description": "Easily construct HATEOAS links",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/just-paja/hateoas.git"
+  },
+  "keywords": [
+    "hateoas",
+    "hal",
+    "link",
+    "construct",
+    "rest"
+  ],
+  "author": "Pavel Žák <pavel@zak.global>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/just-paja/hateoas/issues"
+  },
+  "files": [
+    "*.js",
+    "*.mjs",
+    "LICENSE",
+    "README.md"
+  ],
+  "homepage": "https://github.com/just-paja/hateoas#readme"
+}
