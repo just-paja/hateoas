@@ -37,11 +37,8 @@
     "babel-eslint": "^10.1.0",
     "babel-jest": "^27.0.6",
     "jest": "^27.0.6",
-    "jest-runner-standard": "^0.1.0",
-    "prettier-standard": "^16.4.1",
-    "standard": "^16.0.3"
+    "lerna": "^6.4.1"
   },
-  "peerDependencies": {},
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.{js,jsx}"
