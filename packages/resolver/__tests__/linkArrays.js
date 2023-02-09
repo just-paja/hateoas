@@ -5,12 +5,12 @@ describe('HAL link resolver with array of links', () => {
     const links = [
       {
         href: 'http://example.com/api/users/bar',
-        rel: 'edit'
+        rel: 'edit',
       },
       {
         href: 'http://example.com/api/users/foo',
-        rel: 'delete'
-      }
+        rel: 'delete',
+      },
     ]
     expect(getHalLink(links, 'edit')).toBe('http://example.com/api/users/bar')
   })
@@ -20,13 +20,13 @@ describe('HAL link resolver with array of links', () => {
       links: [
         {
           href: 'http://example.com/api/users/bar',
-          rel: 'edit'
+          rel: 'edit',
         },
         {
           href: 'http://example.com/api/users/foo',
-          rel: 'delete'
-        }
-      ]
+          rel: 'delete',
+        },
+      ],
     }
     expect(getHalLink(user, 'edit')).toBe('http://example.com/api/users/bar')
   })
@@ -35,12 +35,12 @@ describe('HAL link resolver with array of links', () => {
     const links = [
       {
         href: 'http://example.com/api/users',
-        rel: 'edit'
+        rel: 'edit',
       },
       {
         href: 'http://example.com/api/users',
-        rel: 'delete'
-      }
+        rel: 'delete',
+      },
     ]
     expect(getHalLink(links, 'foo')).toBe(null)
   })
@@ -53,12 +53,12 @@ describe('HAL link resolver with array of links', () => {
   it('returns null for missing href attribute', () => {
     const links = [
       {
-        rel: 'edit'
+        rel: 'edit',
       },
       {
         href: 'http://example.com/api/users',
-        rel: 'delete'
-      }
+        rel: 'delete',
+      },
     ]
     expect(getHalLink(links, 'edit')).toBe(null)
   })

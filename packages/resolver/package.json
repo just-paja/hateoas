@@ -1,0 +1,36 @@
+{
+  "name": "@hateoas/resolver",
+  "version": "1.0.4",
+  "type": "module",
+  "description": "Restart your failed sagas and report errors into logs",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel -d lib src --ignore *test*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/just-paja/hateoas-hal-link-resolver.git"
+  },
+  "keywords": [
+    "hateoas",
+    "hal",
+    "link",
+    "resolve",
+    "rest"
+  ],
+  "author": "Pavel Žák <pavel@zak.global>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/just-paja/hateoas-hal-link-resolver/issues"
+  },
+  "files": [
+    "*.js",
+    "*.mjs",
+    "LICENSE",
+    "README.md"
+  ],
+  "homepage": "https://github.com/just-paja/hateoas-hal-link-resolver#readme",
+  "dependencies": {
+    "query-string-manipulator": "^1.2.2"
+  }
+}

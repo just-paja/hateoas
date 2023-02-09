@@ -44,8 +44,8 @@ describe('HAL link resolver in general', () => {
   it('returns null when required key is object without href', () => {
     const links = {
       emptyKey: {
-        link: 'http://example.com/api/users'
-      }
+        link: 'http://example.com/api/users',
+      },
     }
     expect(getHalLink(links, 'emptyKey')).toBe(null)
   })
@@ -55,23 +55,25 @@ describe('HAL link resolver in general', () => {
       groups: [
         {
           src: 'http://example.com/api/users/foo{?projection}',
-          templated: true
+          templated: true,
         },
         {
           url: 'http://example.com/api/users/bar{?projection,page}',
-          templated: true
+          templated: true,
         },
         {
           path: 'http://example.com/api/users/xyz{?projection,page,size}',
-          templated: true
-        }
-      ]
+          templated: true,
+        },
+      ],
     }
-    expect(getHalLink(links, 'groups', {
-      page: 10,
-      size: 5,
-      group: 'users',
-      projection: 'groups'
-    })).toBe(null)
+    expect(
+      getHalLink(links, 'groups', {
+        page: 10,
+        size: 5,
+        group: 'users',
+        projection: 'groups',
+      })
+    ).toBe(null)
   })
 })
