@@ -123,3 +123,61 @@ const entityLink = link(base, segment('userId'))
 const activateLink = link(entityLink, 'activate')
 // "http://example.com/users/{userId}/activate"
 ```
+
+### Inject link into entity
+
+Use `linkObject` method, to conveniently inject links into objects.
+
+```javascript
+import { link, linkObject } from '@hateoas/linker'
+
+const user = {
+  name: 'foo',
+  email: 'foo@example.com',
+}
+
+// Assume `request` is HTTPRequest instance
+const self = link(request, 'users', user.name)
+const activate = link(self, 'activate')
+
+linkObject(user, { self, activate })
+
+/*
+{
+  name: 'foo',
+  email: 'foo@example.com',
+  _links: {
+    self: 'http://example.com/users/foo',
+    activate: 'http://example.com/users/foo/activate',
+  },
+*/
+})
+```
+
+### Inject link into entity collection
+
+Use `linkCollection` method to conventiently inject links into collections.
+
+```javascript
+import { link, linkCollection } from '@hateoas/linker'
+
+// Assume `request` is HTTPRequest instance
+// Assume, there are two already linked users
+const self = link(request, 'users', param('active', 'funny'))
+
+linkCollection(users, { self })
+
+/*
+{
+  name: 'foo',
+  email: 'foo@example.com',
+  _links: {
+    self: {
+      href: 'http://example.com/users{?active,funny}',
+      templated: true,
+    },
+  },
+*/
+})
+
+```
