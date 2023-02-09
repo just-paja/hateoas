@@ -1,6 +1,6 @@
 {
   "name": "@hateoas/resolver",
-  "version": "1.0.4",
+  "version": "1.4.0",
   "type": "module",
   "description": "Resolve HATEOAS links from objects",
   "main": "index.js",

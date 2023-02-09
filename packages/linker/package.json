@@ -1,6 +1,6 @@
 {
   "name": "@hateoas/linker",
-  "version": "1.0.4",
+  "version": "1.4.0",
   "type": "module",
   "description": "Easily construct HATEOAS links",
   "main": "index.js",
