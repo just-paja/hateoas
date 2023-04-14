@@ -1,6 +1,7 @@
 // Cannot use lookbehind in regex because of safari
 const EXPANSION_REGEX = /(\{)[^{]*(\})/g
 
+const RESOURCE_VALUE = 10000
 const DEFAULT_OPERATOR = {
   operator: '',
   separator: ',',
@@ -9,12 +10,24 @@ const DEFAULT_OPERATOR = {
 }
 
 const OPERATORS = [
-  { operator: '#', separator: ',', named: false, ifEmpty: false },
-  { operator: '.', separator: '.', named: false, ifEmpty: false },
-  { operator: '/', separator: '/', named: false, ifEmpty: false },
-  { operator: ';', separator: ';', named: true, ifEmpty: false },
-  { operator: '?', separator: '&', named: true, ifEmpty: true },
-  { operator: '&', separator: '&', named: true, ifEmpty: true },
+  { operator: '#', separator: ',', named: false, ifEmpty: false, value: 1 },
+  {
+    operator: '.',
+    separator: '.',
+    named: false,
+    ifEmpty: false,
+    value: RESOURCE_VALUE,
+  },
+  {
+    operator: '/',
+    separator: '/',
+    named: false,
+    ifEmpty: false,
+    value: RESOURCE_VALUE,
+  },
+  { operator: ';', separator: ';', named: true, ifEmpty: false, value: 10 },
+  { operator: '?', separator: '&', named: true, ifEmpty: true, value: 100 },
+  { operator: '&', separator: '&', named: true, ifEmpty: true, value: 100 },
 ]
 
 function getNamedOperatorIfNeeded(operator, varName, el) {
@@ -41,30 +54,32 @@ function containsParam(params, v, canBeEmpty) {
   return Boolean(params && params[v])
 }
 
-function startsWith(str, needle) {
-  return str.indexOf(needle) === 0
-}
+const detectOperator = str =>
+  OPERATORS.find(operator => str.startsWith(operator.operator))
 
 function getLinkOptions(link) {
   const groups = link.match(EXPANSION_REGEX)
-  if (groups) {
-    return {
-      url: link,
-      options: groups
-        // need to slice of the surrounding '{' and '}' -> slice(1, -1)
-        .reduce((acc, str) => acc.concat(str.slice(1, -1).split(',')), [])
-        .map(str => {
-          if (OPERATORS.some(operator => startsWith(str, operator.operator))) {
-            return str.slice(1)
-          }
-          return str
-        }),
-    }
-  }
-  return {
+  const desc = {
     url: link,
-    options: [],
   }
+  if (groups) {
+    let lastValue = 0
+    desc.options = groups
+      // need to slice of the surrounding '{' and '}' -> slice(1, -1)
+      .reduce((acc, str) => acc.concat(str.slice(1, -1).split(',')), [])
+      .map(str => {
+        let name = str
+        const op = detectOperator(str)
+        if (op) {
+          lastValue = op.value
+          name = str.slice(1)
+        }
+        return { name, value: lastValue }
+      })
+  } else {
+    desc.options = []
+  }
+  return desc
 }
 
 function translateArgumentsWithOperator(str, params, operator) {
@@ -83,9 +98,7 @@ function translateTemplatedLink(link, params) {
   return groups.reduce((returnLink, str) => {
     // need to slice of the surrounding '{' and '}' -> slice(1, -1)
     const slicedStr = str.slice(1, -1)
-    const matchedOperator = OPERATORS.find(operator =>
-      startsWith(slicedStr, operator.operator)
-    )
+    const matchedOperator = detectOperator(slicedStr)
     const operator = matchedOperator || DEFAULT_OPERATOR
     if (!matchedOperator) {
       return returnLink.replace(
@@ -115,9 +128,14 @@ function translateLink(link, params) {
   return link.href
 }
 
-function getMatchQuotient(options, params) {
-  return params ? options.filter(option => option in params).length : 0
-}
+const getParamMatch = (option, params) =>
+  option.name in params ? option.value || RESOURCE_VALUE : 0
+
+const reduceParamMatch = params => (aggr, option) =>
+  aggr + getParamMatch(option, params)
+
+const getMatchQuotient = (options, params) =>
+  params ? options.reduce(reduceParamMatch(params), 0) : 0
 
 function findBestTemplatedLinkForParams(linkList, params) {
   return linkList
